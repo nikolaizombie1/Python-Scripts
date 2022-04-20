@@ -4,6 +4,9 @@ import natsort
 import re
 import os
 import sys
+import shutil
+
+from numpy import equal
 
 sys.stderr.close()
 
@@ -34,7 +37,7 @@ def createName():
     return name.lstrip()
 
 def validateName(name : str):
-    return not(name == None or name == "" or re.match(r'^\s+') or "/" in name or "!" in name)
+    return not(name == None or name == "" or re.match(r'^\s+',name) or "/" in name or "!" in name)
     
 def createDictionary(files : list):
     filesmap = {}
@@ -69,6 +72,17 @@ def renameFiles(sortedkeys : list, name : str, season : str, extention : str, fi
         os.rename(str(filesmap.get(file)), str(episodename))
         e+=1
 
+def moveFiles(name : str, season : str, confirmation : bool):
+    if confirmation:
+        yn = input("Would you like organize the files in a the plex folder format [y/n]?: ")
+        if yn.lower() != "y":
+            return
+    files = list(filter(lambda x: os.path.isfile(x),os.listdir()))
+    os.makedirs(name+ "/" + "Season " + str(season),777,True)
+    for episode in files:
+        shutil.move(f"{episode}",f"{name}/Season {season}/{episode}")
+
+
 
 if len(sys.argv) <= 1:
     print("Script has started")
@@ -85,43 +99,45 @@ if len(sys.argv) <= 1:
     previewFiles(sortedkeys,filesmap,name,season,extention)
     warnUser()
     renameFiles(sortedkeys,name,season,extention,filesmap)
+    moveFiles(name,season, True)
+    print("Script executed sucesfully")
+    exit(0)
+elif sys.argv[1] == "-n" and type(sys.argv[2]) is str and  sys.argv[3] == "-s" and type(sys.argv[4]) is str and sys.argv[5] == "-y":
+    print("Script has started")
+    files = createFileList()
+    if not(validateFiles(files)):
+        exit(1)
+    extention = extentionCreate(files)
+    if extention == "":
+        exit(1)
+    name = sys.argv[2]
+    filesmap = createDictionary(files)
+    sortedkeys = sortKeys(filesmap)
+    season = int(sys.argv[4])
+    previewFiles(sortedkeys,filesmap,name,season,extention)
+    renameFiles(sortedkeys,name,season,extention,filesmap)
+    moveFiles(name,season,False)
+    print("Script executed sucesfully")
+    exit(0)
+elif sys.argv[1] == "-n" and type(sys.argv[2]) is str and  sys.argv[3] == "-s" and type(sys.argv[4]) is str:
+    print("Script has started")
+    files = createFileList()
+    if not(validateFiles(files)):
+        exit(1)
+    extention = extentionCreate(files)
+    if extention == "":
+        exit(1)
+    name = sys.argv[2]
+    filesmap = createDictionary(files)
+    sortedkeys = sortKeys(filesmap)
+    season = int(sys.argv[4])
+    previewFiles(sortedkeys,filesmap,name,season,extention)
+    warnUser()
+    renameFiles(sortedkeys,name,season,extention,filesmap)
+    moveFiles(name,season,False)
     print("Script executed sucesfully")
     exit(0)
 else:
-    if sys.argv[1] == "-n" and type(sys.argv[2]) is str and  sys.argv[3] == "-s" and type(sys.argv[4]) is str and sys.argv[5] == "-y":
-        print("Script has started")
-        files = createFileList()
-        if not(validateFiles(files)):
-            exit(1)
-        extention = extentionCreate(files)
-        if extention == "":
-            exit(1)
-        name = sys.argv[2]
-        filesmap = createDictionary(files)
-        sortedkeys = sortKeys(filesmap)
-        season = int(sys.argv[4])
-        previewFiles(sortedkeys,filesmap,name,season,extention)
-        renameFiles(sortedkeys,name,season,extention,filesmap)
-        print("Script executed sucesfully")
-        exit(0)
-    elif sys.argv[1] == "-n" and type(sys.argv[2]) is str and  sys.argv[3] == "-s" and type(sys.argv[4]) is str:
-        print("Script has started")
-        files = createFileList()
-        if not(validateFiles(files)):
-            exit(1)
-        extention = extentionCreate(files)
-        if extention == "":
-            exit(1)
-        name = sys.argv[2]
-        filesmap = createDictionary(files)
-        sortedkeys = sortKeys(filesmap)
-        season = int(sys.argv[4])
-        previewFiles(sortedkeys,filesmap,name,season,extention)
-        warnUser()
-        renameFiles(sortedkeys,name,season,extention,filesmap)
-        print("Script executed sucesfully")
-        exit(0)
-    else:
-        print("Usage: plexft [-n <NAME> -s <NUMBER>] [-n <NAME> -s <NUMBER> -y]")
-        print("-n <NAME> -s <NUMBER>: Will specify the name of the modified files and the season number they belong to.")
-        print("-n <NAME> -s <NUMBER> -y: Will specify the name of the modified files and the season number they belong to and will bybass all validation if no errors are present in arguments")
+    print("Usage: plexft [-n <NAME> -s <NUMBER>] [-n <NAME> -s <NUMBER> -y]")
+    print("-n <NAME> -s <NUMBER>: Will specify the name of the modified files and the season number they belong to.")
+    print("-n <NAME> -s <NUMBER> -y: Will specify the name of the modified files and the season number they belong to and will bybass all user validation if no errors are present in arguments")
