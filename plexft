@@ -6,8 +6,6 @@ import os
 import sys
 import shutil
 
-from numpy import equal
-
 sys.stderr.close()
 
 def createFileList():
