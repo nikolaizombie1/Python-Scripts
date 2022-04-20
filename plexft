@@ -54,7 +54,6 @@ def createSeason():
         season = input("What season do the episodes belong to?: ")
     return int(season)
 
-
 def previewFiles(sortedkeys : dict, filesmap : list, name : str, season : str, extention : str):
     e=1
     for item in sortedkeys:
@@ -81,8 +80,6 @@ def moveFiles(name : str, season : str, confirmation : bool):
     os.makedirs(name+ "/" + "Season " + str(season),777,True)
     for episode in files:
         shutil.move(f"{episode}",f"{name}/Season {season}/{episode}")
-
-
 
 if len(sys.argv) <= 1:
     print("Script has started")
