@@ -82,8 +82,8 @@ def moveFiles(name : str, season : str, confirmation : bool):
         shutil.move(f"{episode}",f"{name}/Season {season}/{episode}")
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-n", "--name", help="Desired name of files of plex formatted files")
-ap.add_argument("-s", "--season", help="Desired season of files of plex formatted files")
+ap.add_argument("-n", "--name", default="",help="Desired name of files of plex formatted files")
+ap.add_argument("-s", "--season", default="", help="Desired season of files of plex formatted files")
 ap.add_argument("-f", "--folder", action='store_true' ,required=False, help="Will generate the plex folder structure")
 ap.add_argument("-y", "--yes" , action='store_true' ,required=False, help="Will skip all user vrification checks")
 ap.add_argument("-i","--interactive", action='store_true', required=False, help="Runs the script with all user prompts and verifications")
@@ -92,26 +92,29 @@ try:
     args = vars(ap.parse_args())
 except ValueError:
     ap.print_help()
+    exit()
 
 if args.get('interactive') or len(sys.argv) <= 1:
     print("Script has started")
     files = createFileList()
     if not(validateFiles(files)):
-        exit(1)
+        print("There are not files in this directory")
+        exit()
     extention = extentionCreate(files)
     if extention == "":
-        exit(1)
+        exit()
     name = createName()
     filesmap = createDictionary(files)
     sortedkeys = sortKeys(filesmap)
     season = createSeason()
     previewFiles(sortedkeys,filesmap,name,season,extention)
-    warnUser()
+    if not(warnUser()):
+        exit()
     renameFiles(sortedkeys,name,season,extention,filesmap)
     moveFiles(name,season, True)
     print("Script executed sucesfully")
-    exit(0)
-elif not(args.get('help')):
+    exit()
+elif not(args.get('help')): 
     print("Script has started")
     files = createFileList()
     if not(validateFiles(files)):
@@ -125,6 +128,9 @@ elif not(args.get('help')):
     season = int(args.get('season'))
     if not(args.get('yes')):
         previewFiles(sortedkeys,filesmap,name,season,extention)
+    if not(args.get('yes')):
+        if not(warnUser()):
+            exit()
     renameFiles(sortedkeys,name,season,extention,filesmap)
     if args.get('yes') and args.get('folder'):
         moveFiles(name,season, not(args.get('yes')))
@@ -132,3 +138,5 @@ elif not(args.get('help')):
         moveFiles(name,season,args.get('yes'))
     print("Script executed sucesfully")
     exit()
+else:
+    ap.print_help()
