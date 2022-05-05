@@ -1,7 +1,9 @@
 import re
-def decodeRange(input : str):
+def decodeRange():
     range = input("Enter range of episodes: ")
 
+    if re.match("\ *",range) or range == "":
+        return None
     inputs = range.split(" ")
     revisedInputs = []
     for x in inputs:
@@ -55,4 +57,4 @@ def decodeRange(input : str):
 
     numbersList = list(numbersSet)
     numbersList.sort()
-    print(numbersList)
+    return numbersList
