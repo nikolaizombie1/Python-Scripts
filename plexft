@@ -11,12 +11,16 @@ import argparse
 sys.stderr.close()
 
 
-def decodeRange():
-    range = input("Enter range of episodes: ")
+def decodeRange(sortedKeys : list):
+    ranges = input("Enter range of episodes: ")
 
-    if re.match("\ *",range) or range == "":
-        return None
-    inputs = range.split(" ")
+    if re.match("\s+",ranges) or ranges == "":
+        numbersList = []
+        for x in range(len(sortedKeys)):
+            numbersList.append(x+1)
+        return numbersList
+
+    inputs = ranges.split(" ")
     revisedInputs = []
     for x in inputs:
         if re.match("\d+\d+\-\d+\d*|(\d+\,)+\d*|(\d+)+",x) != None and not re.search("[a-zA-z]",x):
@@ -134,14 +138,20 @@ def warnUser():
     yn = input("\n***WARNING*** All changes to the files are permantent.\n Would you like to proceed? [y/n]: ")
     return (yn.lower() == "y")
 
-def renameFiles(sortedkeys : list, name : str, season : str, extention : str, filesmap : dict):
+def renameFiles(sortedkeys : list, name : str, season : str, extention : str, filesmap : dict, numbersList : list):
     e=1
+    i=1
+    renamedFiles = []
     for file in sortedkeys:
-        episodename = name + " S" + str(season) + "E" + str(e) + "." + extention 
-        os.rename(str(filesmap.get(file)), str(episodename))
-        e+=1
+        if numbersList == None or numbersList.__contains__(i) :
+            episodename = name + " S" + str(season) + "E" + str(e) + "." + extention 
+            os.rename(str(filesmap.get(file)), str(episodename))
+            e+=1
+            renamedFiles.append(episodename)
+        i +=1
+    return renamedFiles
 
-def moveFiles(name : str, season : str, confirmation : bool):
+def moveFiles(name : str, season : str, confirmation : bool, changedFiles : list):
     if confirmation:
         yn = input("Would you like organize the files in a the plex folder format [y/n]?: ")
         if yn.lower() != "y":
@@ -149,7 +159,8 @@ def moveFiles(name : str, season : str, confirmation : bool):
     files = list(filter(lambda x: os.path.isfile(x),os.listdir()))
     os.makedirs(name+ "/" + "Season " + str(season),0o777,True)
     for episode in files:
-        shutil.move(f"{episode}",f"{name}/Season {season}/{episode}")
+        if changedFiles == None or episode in changedFiles:
+            shutil.move(f"{episode}",f"{name}/Season {season}/{episode}")
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-n", "--name", default="",help="Desired name of files of plex formatted files")
@@ -178,16 +189,17 @@ if args.get('interactive') or len(sys.argv) <= 1:
     sortedkeys = sortKeys(filesmap)
     season = createSeason()
     previewFiles(sortedkeys,filesmap,name,season,extention)
-    numbersList = decodeRange()
+    numbersList = decodeRange(sortedkeys)
     verifyRange(numbersList,files)
     if not(warnUser()):
         sys.exit()
-    renameFiles(sortedkeys,name,season,extention,filesmap)
-    moveFiles(name,season, True)
+    renamedFiles = renameFiles(sortedkeys,name,season,extention,filesmap,numbersList)
+    moveFiles(name,season, True,renamedFiles)
     print("Script executed sucesfully")
-    exit()
+    sys.exit()
 elif not(args.get('help')): 
-    print("Script has started")
+    if not args.get('yes'):
+        print("Script has started")
     files = createFileList()
     if not(validateFiles(files)):
         sys.exit()
@@ -203,12 +215,19 @@ elif not(args.get('help')):
     if not(args.get('yes')):
         if not(warnUser()):
             sys.exit()
-    renameFiles(sortedkeys,name,season,extention,filesmap)
+    if not(args.get('yes')):
+        numbersList = decodeRange(sortedkeys)
+        verifyRange(numbersList,files)
+        changedFiles = renameFiles(sortedkeys,name,season,extention,filesmap,numbersList)
+    else:
+        changedFiles = renameFiles(sortedkeys,name,season,extention,filesmap,None)
+
     if args.get('yes') and args.get('folder'):
-        moveFiles(name,season, not(args.get('yes')))
+        moveFiles(name,season, not(args.get('yes')),None)
     elif not(args.get('yes')) and args.get('folder'):
-        moveFiles(name,season,args.get('yes'))
-    print("Script executed sucesfully")
-    exit()
+        moveFiles(name,season,args.get('yes'),numbersList,changedFiles)
+    if not args.get('yes'):
+        print("Script executed sucesfully")
+    sys.exit()
 else:
     ap.print_help()
