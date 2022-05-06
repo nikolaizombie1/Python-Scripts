@@ -223,7 +223,7 @@ try:
         if args.get('yes') and args.get('folder'):
             moveFiles(name,season, not(args.get('yes')),None)
         elif not(args.get('yes')) and args.get('folder'):
-            moveFiles(name,season,args.get('yes'),numbersList,changedFiles)
+            moveFiles(name,season,args.get('yes'),changedFiles)
         if not args.get('yes'):
             print("Script executed sucesfully")
         sys.exit()
