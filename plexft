@@ -8,9 +8,6 @@ import sys
 import shutil
 import argparse
 
-sys.stderr.close()
-
-
 def decodeRange(sortedKeys : list):
     ranges = input("Enter range of episodes: ")
 
@@ -175,59 +172,62 @@ except ValueError:
     ap.print_help()
     exit()
 
-if args.get('interactive') or len(sys.argv) <= 1:
-    print("Script has started")
-    files = createFileList()
-    if not(validateFiles(files)):
-        print("There are not files in this directory")
-        sys.exit()
-    extention = extentionCreate(files)
-    if extention == "":
-        sys.exit()
-    name = createName()
-    filesmap = createDictionary(files)
-    sortedkeys = sortKeys(filesmap)
-    season = createSeason()
-    previewFiles(sortedkeys,filesmap,name,season,extention)
-    numbersList = decodeRange(sortedkeys)
-    verifyRange(numbersList,files)
-    if not(warnUser()):
-        sys.exit()
-    renamedFiles = renameFiles(sortedkeys,name,season,extention,filesmap,numbersList)
-    moveFiles(name,season, True,renamedFiles)
-    print("Script executed sucesfully")
-    sys.exit()
-elif not(args.get('help')): 
-    if not args.get('yes'):
+try:
+    if args.get('interactive') or len(sys.argv) <= 1:
         print("Script has started")
-    files = createFileList()
-    if not(validateFiles(files)):
-        sys.exit()
-    extention = extentionCreate(files)
-    if extention == "":
-        sys.exit()
-    name = args.get('name')
-    filesmap = createDictionary(files)
-    sortedkeys = sortKeys(filesmap)
-    season = int(args.get('season'))
-    if not(args.get('yes')):
-        previewFiles(sortedkeys,filesmap,name,season,extention)
-    if not(args.get('yes')):
-        if not(warnUser()):
+        files = createFileList()
+        if not(validateFiles(files)):
+            print("There are not files in this directory")
             sys.exit()
-    if not(args.get('yes')):
+        extention = extentionCreate(files)
+        if extention == "":
+            sys.exit()
+        name = createName()
+        filesmap = createDictionary(files)
+        sortedkeys = sortKeys(filesmap)
+        season = createSeason()
+        previewFiles(sortedkeys,filesmap,name,season,extention)
         numbersList = decodeRange(sortedkeys)
         verifyRange(numbersList,files)
-        changedFiles = renameFiles(sortedkeys,name,season,extention,filesmap,numbersList)
-    else:
-        changedFiles = renameFiles(sortedkeys,name,season,extention,filesmap,None)
-
-    if args.get('yes') and args.get('folder'):
-        moveFiles(name,season, not(args.get('yes')),None)
-    elif not(args.get('yes')) and args.get('folder'):
-        moveFiles(name,season,args.get('yes'),numbersList,changedFiles)
-    if not args.get('yes'):
+        if not(warnUser()):
+            sys.exit()
+        renamedFiles = renameFiles(sortedkeys,name,season,extention,filesmap,numbersList)
+        moveFiles(name,season, True,renamedFiles)
         print("Script executed sucesfully")
-    sys.exit()
-else:
-    ap.print_help()
+        sys.exit()
+    elif not(args.get('help')): 
+        if not args.get('yes'):
+            print("Script has started")
+        files = createFileList()
+        if not(validateFiles(files)):
+            sys.exit()
+        extention = extentionCreate(files)
+        if extention == "":
+            sys.exit()
+        name = args.get('name')
+        filesmap = createDictionary(files)
+        sortedkeys = sortKeys(filesmap)
+        season = int(args.get('season'))
+        if not(args.get('yes')):
+            previewFiles(sortedkeys,filesmap,name,season,extention)
+        if not(args.get('yes')):
+            if not(warnUser()):
+                sys.exit()
+        if not(args.get('yes')):
+            numbersList = decodeRange(sortedkeys)
+            verifyRange(numbersList,files)
+            changedFiles = renameFiles(sortedkeys,name,season,extention,filesmap,numbersList)
+        else:
+            changedFiles = renameFiles(sortedkeys,name,season,extention,filesmap,None)
+
+        if args.get('yes') and args.get('folder'):
+            moveFiles(name,season, not(args.get('yes')),None)
+        elif not(args.get('yes')) and args.get('folder'):
+            moveFiles(name,season,args.get('yes'),numbersList,changedFiles)
+        if not args.get('yes'):
+            print("Script executed sucesfully")
+        sys.exit()
+    else:
+        ap.print_help()
+except KeyboardInterrupt:
+    print("\r")
