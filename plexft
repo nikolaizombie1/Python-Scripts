@@ -136,7 +136,7 @@ def previewFiles(sortedkeys: dict, filesmap: list, name: str, season: str, numbe
 
 def warnUser():
     yn = input(
-        "\n***WARNING*** All changes to the files are permantent.\n Would you like to proceed? [y/n]: "
+        "***WARNING*** All changes to the files are permantent.\n Would you like to proceed? [y/n]: "
     )
     return (yn.lower() == "y")
 
