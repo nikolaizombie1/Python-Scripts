@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from click import FileError
 import natsort
 import re
 import os
@@ -8,6 +7,7 @@ import sys
 import shutil
 import argparse
 
+from numpy import number
 
 def decodeRange(sortedKeys: list):
     ranges = input("Enter range of episodes: ")
@@ -90,21 +90,6 @@ def createFileList():
 def validateFiles(files: list):
     return not (len(files) <= 0)
 
-
-def extentionCreate(files: list):
-    extentionl = files[0].split(".")
-    if len(extentionl) == 1:
-        print("Some video files do not have extentions")
-        yn = input("Would you like to manually specify an extention? [y/n]: ")
-        if yn.lower() != "y":
-            return ""
-        else:
-            extention = input("Input your prefered extention: ")
-    else:
-        extention = str(extentionl[len(extentionl) - 1])
-    return extention
-
-
 def createName():
     name = input("What would you like the files to be called?: ")
     while not (validateName(name)):
@@ -114,7 +99,7 @@ def createName():
 
 def validateName(name: str):
     return not (name == None or name == "" or re.match(r'^\s+', name)
-                or "/" in name or "!" in name)
+                or "/" in name)
 
 
 def createDictionary(files: list):
@@ -135,15 +120,17 @@ def createSeason():
     return int(season)
 
 
-def previewFiles(sortedkeys: dict, filesmap: list, name: str, season: str,
-                 extention: str):
+def previewFiles(sortedkeys: dict, filesmap: list, name: str, season: str, numbersList : list):
     e = 1
     index = 1
     for item in sortedkeys:
-        print(
-            str(index) + ". " + filesmap.get(item) + " ----> " + name + " S" +
-            str(season) + "E" + str(e) + "." + extention)
-        e += 1
+        if index in numbersList:
+            fileExtention = item.split(".")
+            extention = fileExtention[-1]
+            print(
+                str(index) + ". " + filesmap.get(item) + " ----> " + name + " S" +
+                str(season) + "E" + str(e) + "." + extention)
+            e += 1
         index += 1
 
 
@@ -154,13 +141,15 @@ def warnUser():
     return (yn.lower() == "y")
 
 
-def renameFiles(sortedkeys: list, name: str, season: str, extention: str,
+def renameFiles(sortedkeys: list, name: str, season: str,
                 filesmap: dict, numbersList: list):
     e = 1
     i = 1
     renamedFiles = []
     for file in sortedkeys:
         if numbersList == None or numbersList.__contains__(i):
+            fileExtention = file.split(".")
+            extention = fileExtention[-1]
             episodename = name + " S" + str(season) + "E" + str(
                 e) + "." + extention
             os.rename(str(filesmap.get(file)), str(episodename))
@@ -222,19 +211,18 @@ try:
         if not (validateFiles(files)):
             print("There are not files in this directory")
             sys.exit()
-        extention = extentionCreate(files)
-        if extention == "":
-            sys.exit()
         name = createName()
         filesmap = createDictionary(files)
         sortedkeys = sortKeys(filesmap)
         season = createSeason()
-        previewFiles(sortedkeys, filesmap, name, season, extention)
+        numbersList = range(1,len(files),1)
+        previewFiles(sortedkeys, filesmap, name, season,numbersList)
         numbersList = decodeRange(sortedkeys)
         verifyRange(numbersList, files)
+        previewFiles(sortedkeys, filesmap, name, season,numbersList)
         if not (warnUser()):
             sys.exit()
-        renamedFiles = renameFiles(sortedkeys, name, season, extention,
+        renamedFiles = renameFiles(sortedkeys, name, season,
                                    filesmap, numbersList)
         moveFiles(name, season, True, renamedFiles)
         print("Script executed sucesfully")
@@ -245,25 +233,24 @@ try:
         files = createFileList()
         if not (validateFiles(files)):
             sys.exit()
-        extention = extentionCreate(files)
-        if extention == "":
-            sys.exit()
         name = args.get('name')
         filesmap = createDictionary(files)
         sortedkeys = sortKeys(filesmap)
         season = int(args.get('season'))
+        numbersList = range(1,len(files),1)
         if not (args.get('yes')):
-            previewFiles(sortedkeys, filesmap, name, season, extention)
+            previewFiles(sortedkeys, filesmap, name, season,numbersList)
         if not (args.get('yes')):
             if not (warnUser()):
                 sys.exit()
         if not (args.get('yes')):
             numbersList = decodeRange(sortedkeys)
             verifyRange(numbersList, files)
-            changedFiles = renameFiles(sortedkeys, name, season, extention,
+            previewFiles(sortedkeys, filesmap, name, season,numbersList)
+            changedFiles = renameFiles(sortedkeys, name, season,
                                        filesmap, numbersList)
         else:
-            changedFiles = renameFiles(sortedkeys, name, season, extention,
+            changedFiles = renameFiles(sortedkeys, name, season,
                                        filesmap, None)
 
         if args.get('yes') and args.get('folder'):
