@@ -7,9 +7,6 @@ import sys
 import shutil
 import argparse
 
-from numpy import number
-
-
 def decodeRange(sortedKeys: list):
     ranges = input("Enter range of episodes: ")
 
