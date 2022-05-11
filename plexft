@@ -215,7 +215,7 @@ try:
         filesmap = createDictionary(files)
         sortedkeys = sortKeys(filesmap)
         season = createSeason()
-        numbersList = range(1, len(files), 1)
+        numbersList = range(1, len(files)+1, 1)
         previewFiles(sortedkeys, filesmap, name, season, numbersList)
         numbersList = decodeRange(sortedkeys)
         verifyRange(numbersList, files)
